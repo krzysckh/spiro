@@ -1,0 +1,4 @@
+raygui.h
+*.~undo-tree~
+spiro
+*.o
