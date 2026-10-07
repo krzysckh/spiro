@@ -1,0 +1,8 @@
+#+TITLE: spiro
+#+AUTHOR: kpm
+
+#+BEGIN_SRC
+$ make
+#+END_SRC
+
+[[https://img.krzysckh.org/fpfmpsap.png]]
