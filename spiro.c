@@ -11,9 +11,28 @@
 #include "raygui.h"
 
 #define SIZ 600
+#define ANIM_STEP_SIZE 100
+#define SCALE(or, ir) ((double)(or - ir) / (double) ir)
 
 static float QUALITY = 0.01;
 static float N_ROT = 100;
+
+static inline void
+spiro_do_step(double i, unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, double scale, double *xP, double *yP)
+{
+  double xp, yp, xi, yi;
+
+  xp = or*cos((double)i) + x;
+  yp = or*sin((double)i) + y;
+
+  /* center of inner circle */
+  xi = ir*cos((double)(M_PI+i)) + xp;
+  yi = ir*sin((double)(M_PI+i)) + yp;
+
+  /* point on inner circle */
+  *xP = ir2*cos((double)2.0*M_PI - i*scale) + xi;
+  *yP = ir2*sin((double)2.0*M_PI - i*scale) + yi;
+}
 
 /* (x, y) is the center
    or     is the outer radius
@@ -22,25 +41,12 @@ static float N_ROT = 100;
 void
 spiro(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Color c, uint8_t *P)
 {
-  double scale = (double)(or - ir) / (double) ir;
+  double scale = SCALE(or, ir);
 
   double i = 0.;
-  double xp, yp, xi, yi, xP, yP;
+  double xP, yP;
   while (i < 2*M_PI * N_ROT) {
-    xp = or*cos((double)i) + x;
-    yp = or*sin((double)i) + y;
-    /* DrawPixel(xp, yp, c); */
-
-    /* center of inner circle */
-    xi = ir*cos((double)(M_PI+i)) + xp;
-    yi = ir*sin((double)(M_PI+i)) + yp;
-
-    /* DrawPixel(xi, yi, PINK); */
-
-    /* point on inner circle */
-
-    xP = ir2*cos((double)2.0*M_PI - i*scale) + xi;
-    yP = ir2*sin((double)2.0*M_PI - i*scale) + yi;
+    spiro_do_step(i, x, y, or, ir, ir2, scale, &xP, &yP);
 
     DrawPixel(xP, yP, c);
     if (P && xP >= 0 && xP <= SIZ && yP >= 0 && yP <= SIZ)
@@ -48,6 +54,36 @@ spiro(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Color c, u
 
     i += QUALITY;
   }
+}
+
+void
+spiro_animate(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Color c)
+{
+  double scale = SCALE(or, ir);
+  unsigned ctr = 0;
+
+  BeginDrawing();
+  ClearBackground(BLACK);
+  EndDrawing();
+
+  double i = 0.;
+  double xP, yP;
+
+  BeginDrawing();
+  while (i < 2*M_PI * N_ROT && !WindowShouldClose()) {
+    ctr++;
+    if (ctr >= ANIM_STEP_SIZE) {
+      ctr = 0;
+      EndDrawing();
+      BeginDrawing();
+    }
+
+    spiro_do_step(i, x, y, or, ir, ir2, scale, &xP, &yP);
+    DrawPixel(xP, yP, c);
+
+    i += QUALITY;
+  }
+  EndDrawing();
 }
 
 void
@@ -84,19 +120,12 @@ main(void)
   float ir2 = 100;
 
   while (!WindowShouldClose()) {
+    if (IsKeyDown(KEY_A))
+      spiro_animate(300, 300, 300, ir, ir2, ORANGE);
+
     BeginDrawing();
 
     ClearBackground(BLACK);
-
-    /* if (IsKeyDown(KEY_A)) ir++; */
-    /* if (IsKeyDown(KEY_Z)) ir--; */
-    /* if (IsKeyDown(KEY_S)) ir2++; */
-    /* if (IsKeyDown(KEY_X)) ir2--; */
-
-    /* if (IsKeyPressed(KEY_Q)) QUALITY += 0.001; */
-    /* if (IsKeyPressed(KEY_W)) QUALITY -= 0.001; */
-    /* if (QUALITY <= 0.0) */
-    /*   QUALITY = 0.001; */
 
     GuiSlider((Rectangle) {0.0, 0.0,  300.0, 30.0}, "",  TextFormat("r: %lf", ir), &ir, 0, 600);
     GuiSlider((Rectangle) {0.0, 35.0, 300.0, 30.0}, "",  TextFormat("r': %lf", ir2), &ir2, 0, ir);
@@ -105,10 +134,6 @@ main(void)
 
     if (ir2 > ir)
       ir2 = ir;
-
-    /* DrawText(TextFormat("ir: %d", ir), 0, 0, 16, WHITE); */
-    /* DrawText(TextFormat("ir2: %d", ir2), 0, 20, 16, WHITE); */
-    /* DrawText(TextFormat("Q: %lf", QUALITY), 0, 40, 16, WHITE); */
 
     DrawFPS(500, 0);
 

@@ -2,3 +2,6 @@ raygui.h
 *.~undo-tree~
 spiro
 *.o
+export.*
+*.exe
+*.a
