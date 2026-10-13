@@ -1,32 +1,25 @@
 #+TITLE: spiro
 #+AUTHOR: kpm
 
-* screenshot
+This file is [[https://pub.krzysckh.org/spiro.pdf][available online as a PDF file]].
+
+* Obligatory screenshot
 
 [[https://img.krzysckh.org/fpfmpsap.png]]
 
-* building
+* Building
+
+This boldly assumes raylib (ver. 5) is already installed on the machine.
 
 #+BEGIN_SRC
 $ make
 #+END_SRC
 
 
-* sliders
-The outer circle is always the size of the window \( R = \frac{SIZ}{2} \). By default,
-#+BEGIN_SRC c
-#define SIZ 600
-#+END_SRC
-this value is used for window size.
-
-Sliders control (in order):
-- the radius of the inner circle (\( r \))
-- the radius of the point (\(P\)) on the inner circle (\( r' \))
-- the quality (step size - lower is better)
-- the number of rotations (higher is better)
+* Sliders
 
 #+CAPTION: Construction of a spirograph.
-[[./spiro.png]]
+[[./spiro.svg]]
 
 # \begin{tikzpicture}
 # \draw[color=red!100, fill=red!5, thick](0,0) circle (1.25);
@@ -41,6 +34,14 @@ Sliders control (in order):
 # \draw[violet, thick] (0,0) -- (0.95,0.8);
 # \draw[arrows=-Stealth] (node1.north) -- (-1.1,-0.03);
 # \end{tikzpicture}
+
+The outer circle is always the size of the window \( R = \frac{SIZ}{2} \). By default, \( SIZ = 600 \) is used for window size.
+
+Sliders control (in order):
+- the radius of the inner circle (\( r \)),
+- the "second radius" (\( r' \)), which is the distance of the target point (\(P\)) from the center of the inner circle,
+- the quality (step size - lower is better),
+- the number of rotations (higher is better),
 
 * keybinds
 

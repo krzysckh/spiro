@@ -10,3 +10,5 @@ libraylib5.a:
 	wget -O libraylib5.a https://pub.krzysckh.org/libraylib5.a
 spiro.exe: spiro.c libraylib5.a
 	x86_64-w64-mingw32-gcc -mwindows -I/usr/local/include -o $@ spiro.c libraylib5.a -lm -lwinmm -lgdi32 -static
+spiro.pdf: README.org
+	pandoc -f org+smart --standalone -o $@ README.org
