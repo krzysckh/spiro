@@ -10,18 +10,24 @@
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
+#define nil NULL
 #define SIZ 600
 #define ANIM_STEP_SIZE 100
 #define SCALE(or, ir) ((double)(or - ir) / (double) ir)
+
+typedef struct {
+  double x, y;
+} vec2;
 
 static float QUALITY = 0.01;
 static float N_ROT = 100;
 
 static inline void
-spiro_do_step(double i, unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, double scale, double *xP, double *yP)
+spiro_do_step(double i, unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, double scale, vec2 *P, vec2 *ipt)
 {
   double xp, yp, xi, yi;
 
+  /* point on outer circle */
   xp = or*cos((double)i) + x;
   yp = or*sin((double)i) + y;
 
@@ -29,9 +35,12 @@ spiro_do_step(double i, unsigned x, unsigned y, unsigned or, unsigned ir, unsign
   xi = ir*cos((double)(M_PI+i)) + xp;
   yi = ir*sin((double)(M_PI+i)) + yp;
 
+  if (ipt)
+    ipt->x = xi, ipt->y = yi;
+
   /* point on inner circle */
-  *xP = ir2*cos((double)2.0*M_PI - i*scale) + xi;
-  *yP = ir2*sin((double)2.0*M_PI - i*scale) + yi;
+  P->x = ir2*cos((double)2.0*M_PI - i*scale) + xi;
+  P->y = ir2*sin((double)2.0*M_PI - i*scale) + yi;
 }
 
 /* (x, y) is the center
@@ -44,13 +53,13 @@ spiro(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Color c, u
   double scale = SCALE(or, ir);
 
   double i = 0.;
-  double xP, yP;
+  vec2 pt;
   while (i < 2*M_PI * N_ROT) {
-    spiro_do_step(i, x, y, or, ir, ir2, scale, &xP, &yP);
+    spiro_do_step(i, x, y, or, ir, ir2, scale, &pt, nil);
 
-    DrawPixel(xP, yP, c);
-    if (P && xP >= 0 && xP <= SIZ && yP >= 0 && yP <= SIZ)
-      P[(unsigned)yP*SIZ + (unsigned)xP] = 1;
+    DrawPixel(pt.x, pt.y, c);
+    if (P && pt.x >= 0 && pt.x <= SIZ && pt.y >= 0 && pt.y <= SIZ)
+      P[(unsigned)pt.y*SIZ + (unsigned)pt.x] = 1;
 
     i += QUALITY;
   }
@@ -59,27 +68,38 @@ spiro(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Color c, u
 void
 spiro_animate(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Color c)
 {
+  RenderTexture2D t = LoadRenderTexture(SIZ, SIZ);
+
   double scale = SCALE(or, ir);
   unsigned ctr = 0;
 
-  BeginDrawing();
-  ClearBackground(BLACK);
-  EndDrawing();
-
   double i = 0.;
-  double xP, yP;
+  vec2 pt, ipt;
 
-  BeginDrawing();
+  BeginTextureMode(t);
+  ClearBackground(BLACK);
+  EndTextureMode();
+
   while (i < 2*M_PI * N_ROT && !WindowShouldClose()) {
     ctr++;
     if (ctr >= ANIM_STEP_SIZE) {
       ctr = 0;
-      EndDrawing();
       BeginDrawing();
+      ClearBackground(BLACK);
+      DrawTexturePro(t.texture,
+                     (Rectangle){0, 0, t.texture.width, -t.texture.height}, /* WHY is the texture backwards */
+                     (Rectangle){SIZ/2.f, SIZ/2.f, t.texture.width, t.texture.height},
+                     (Vector2){t.texture.width/2.f, t.texture.height/2.f}, 0, WHITE);
+      DrawCircle(ipt.x, ipt.y, 2, MAGENTA);
+      DrawCircle(pt.x, pt.y, 5, RED); /* even though the point is right */
+      DrawCircleLines(ipt.x, ipt.y, ir, GRAY);
+      EndDrawing();
     }
 
-    spiro_do_step(i, x, y, or, ir, ir2, scale, &xP, &yP);
-    DrawPixel(xP, yP, c);
+    spiro_do_step(i, x, y, or, ir, ir2, scale, &pt, &ipt);
+    BeginTextureMode(t);
+    DrawPixel(pt.x, pt.y, c);
+    EndTextureMode();
 
     i += QUALITY;
   }
@@ -141,7 +161,7 @@ main(void)
       spiro(300, 300, 300, ir, ir2, ORANGE, plane);
       export(plane, "export.ppm", ORANGE);
     } else {
-      spiro(300, 300, 300, ir, ir2, ORANGE, NULL);
+      spiro(300, 300, 300, ir, ir2, ORANGE, nil);
     }
 
     EndDrawing();

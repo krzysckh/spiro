@@ -5,3 +5,5 @@ spiro
 export.*
 *.exe
 *.a
+ltximg/*
+temp*
