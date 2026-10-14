@@ -1,7 +1,7 @@
 #+TITLE: spiro
 #+AUTHOR: kpm
 
-This file is [[https://pub.krzysckh.org/spiro.pdf][available online as a PDF file]].
+This file is [[https://pub.krzysckh.org/spiro.pdf][available online as a PDF document]].
 
 * Obligatory screenshot
 
