@@ -153,7 +153,7 @@ main(void)
 
   while (!WindowShouldClose()) {
     if (IsKeyDown(KEY_A))
-      spiro_animate(300, 300, 300, ir, ir2, ORANGE);
+      spiro_animate(SIZ/2.f, SIZ/2.f, SIZ/2.f, ir, ir2, ORANGE);
 
     BeginDrawing();
 
@@ -173,13 +173,13 @@ main(void)
     if (ir2 > ir)
       ir2 = ir;
 
-    DrawFPS(500, 0);
+    DrawFPS(SIZ-100, 0);
 
     if (IsKeyPressed(KEY_E)) {
-      spiro(300, 300, 300, ir, ir2, ORANGE, plane);
+      spiro(SIZ/2.f, SIZ/2.f, SIZ/2.f, ir, ir2, ORANGE, plane);
       export(plane, "export.ppm", ORANGE);
     } else {
-      spiro(300, 300, 300, ir, ir2, ORANGE, nil);
+      spiro(SIZ/2.f, SIZ/2.f, SIZ/2.f, ir, ir2, ORANGE, nil);
     }
 
     EndDrawing();
