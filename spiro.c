@@ -12,7 +12,6 @@
 
 #define nil NULL
 #define SIZ 600
-#define ANIM_STEP_SIZE 100
 #define SCALE(or, ir) ((double)(or - ir) / (double) ir)
 
 typedef struct {
@@ -65,6 +64,14 @@ spiro(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Color c, u
   }
 }
 
+static void
+draw_cogs(vec2 ipt, unsigned ir, unsigned ir2)
+{
+  DrawCircleLines(ipt.x, ipt.y, ir, GRAY);
+  DrawCircleLines(ipt.x, ipt.y, ir2, LIGHTGRAY);
+  DrawCircleLines(SIZ/2.f, SIZ/2.f, SIZ/2.f, RED);
+}
+
 void
 spiro_animate(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Color c)
 {
@@ -72,9 +79,12 @@ spiro_animate(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Co
 
   double scale = SCALE(or, ir);
   unsigned ctr = 0;
+  float step_size = 10;
 
   double i = 0.;
   vec2 pt, ipt;
+
+  Rectangle sl = {0.0, 0.0, 300.0, 30.0};
 
   BeginTextureMode(t);
   ClearBackground(BLACK);
@@ -82,7 +92,7 @@ spiro_animate(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Co
 
   while (i < 2*M_PI * N_ROT && !WindowShouldClose()) {
     ctr++;
-    if (ctr >= ANIM_STEP_SIZE) {
+    if (ctr >= step_size) {
       ctr = 0;
       BeginDrawing();
       ClearBackground(BLACK);
@@ -92,7 +102,9 @@ spiro_animate(unsigned x, unsigned y, unsigned or, unsigned ir, unsigned ir2, Co
                      (Vector2){t.texture.width/2.f, t.texture.height/2.f}, 0, WHITE);
       DrawCircle(ipt.x, ipt.y, 2, MAGENTA);
       DrawCircle(pt.x, pt.y, 5, RED); /* even though the point is right */
-      DrawCircleLines(ipt.x, ipt.y, ir, GRAY);
+      draw_cogs(ipt, ir, ir2);
+      if (CheckCollisionPointRec(GetMousePosition(), sl))
+        GuiSlider(sl, "", TextFormat("step_size: %lf", step_size), &step_size, 1, 100);
       EndDrawing();
     }
 
@@ -136,8 +148,8 @@ main(void)
   uint8_t *plane = malloc(SIZ * SIZ);
   memset(plane, 0, SIZ*SIZ);
 
-  float ir = 200;
-  float ir2 = 100;
+  float ir = 84.f;
+  float ir2 = 64.f;
 
   while (!WindowShouldClose()) {
     if (IsKeyDown(KEY_A))
@@ -147,10 +159,16 @@ main(void)
 
     ClearBackground(BLACK);
 
-    GuiSlider((Rectangle) {0.0, 0.0,  300.0, 30.0}, "",  TextFormat("r: %lf", ir), &ir, 0, 600);
+    GuiSlider((Rectangle) {0.0, 0.0,  300.0, 30.0}, "",  TextFormat("r: %lf", ir), &ir, 0, SIZ/2.f);
     GuiSlider((Rectangle) {0.0, 35.0, 300.0, 30.0}, "",  TextFormat("r': %lf", ir2), &ir2, 0, ir);
-    GuiSlider((Rectangle) {0.0, 70.0, 300.0, 30.0}, "",  TextFormat("q: %lf", QUALITY), &QUALITY, 0.0005, 0.4);
+    GuiSlider((Rectangle) {0.0, 70.0, 300.0, 30.0}, "",  TextFormat("q: %lf", QUALITY), &QUALITY, 0.0005, 0.1);
     GuiSlider((Rectangle) {0.0, 105.0, 300.0, 30.0}, "", TextFormat("N: %lf", N_ROT), &N_ROT, 1, 1000);
+
+    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
+      vec2 ipt, _;
+      spiro_do_step(0, SIZ/2.f, SIZ/2.f, SIZ/2.f, ir, ir2, SCALE(SIZ/2.f, ir), &_, &ipt);
+      draw_cogs(ipt, ir, ir2);
+    }
 
     if (ir2 > ir)
       ir2 = ir;
